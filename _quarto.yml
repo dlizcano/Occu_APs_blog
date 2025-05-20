@@ -1,0 +1,39 @@
+project:
+  type: website
+  output-dir: docs
+  
+website:
+  title: "Occupancy in Protected Areas"
+  navbar:
+    right:
+      - about.qmd
+      - icon: github
+        href: https://github.com/
+      - icon: twitter
+        href: https://twitter.com
+format:
+  html:
+    toc: true
+    theme:
+      light: flatly
+      dark: darkly
+    css: styles.css
+    code-link: true
+    code-block-bg: "gray70" 
+    code-fold: true
+    highlight-style: arrow
+    mainfont: Fira Sans
+    fig-dpi: 600
+    fig-align: center
+    fig-width: 8
+    fig-asp: 0.618 # 1 / pi
+    fig-format: png
+
+lightbox:
+  match: auto
+  effect: fade
+  desc-position: right
+  loop: TRUE
+  
+editor: visual
+

@@ -1,0 +1,414 @@
+---
+title: "Fitting a Multi-Species non Spatial Occupancy Model"
+subtitle: "Using Llanganates subset of the WCS camera trap dataset"
+lightbox: true
+author: 
+  - name: German Forero
+    orcid: https://orcid.org/0000-0001-9952-7221
+  - name: Galo Zapara-Rios
+    orcid: https://orcid.org/0000-0003-3508-5078
+  - name: Diego J. Lizcano
+    orcid: https://orcid.org/0000-0002-9648-0576
+toc: true
+format: 
+  html:
+    code-fold: true
+    code-block-bg: true
+    code-block-border-left: "#31BAE9"
+license: CC BY-SA
+date: "2025-05-17"
+execute:
+  freeze: true
+citation: true
+google-scholar: true
+bibliography: grateful-refs.bib
+bibliographystyle: https://www.zotero.org/styles/tapir-conservation
+categories: [model, code, analysis]
+image: "image.png"
+---
+
+## Multi-species occupancy model using CamtrapR package
+
+Multi-species occupancy models are a powerful tool for combining information from multiple species to estimate both individual and community-level responses to environmental variables. These models are typically fit using Bayesian frameworks such as BUGS, JAGS, or Nimble. However, preparing the necessary input from camera trapping data, writing the model code, setting parameters to monitor, and providing initial values can be a daunting and time-consuming task, even for experienced users. 
+
+`camtrapR` helps using custom funtions to fit community occupancy models for analysis in JAGS or Nimble with several limitations such as: models with categorical observation-level covariates cannot be compiled in Nimble and must be fit in JAGS instead. Priors can not be customized, and independent effects are only supported in continuous site covariates. 
+
+In terms of speed, Nimble does not seem to have an advantage over JAGS. 
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| warning: false
+#| message: false
+#| 
+library(grateful)
+library(readxl)
+library(DT)
+library(sf)
+library(mapview)
+library(maps)
+library(tmap)
+library(terra)
+library(elevatr)
+#library(spOccupancy)
+
+library(rjags) # Bayesian Graphical Models using MCMC 
+library(bayesplot) # Plotting for Bayesian Models # Plotting for Bayesian Models
+library(tictoc) # Functions for Timing R Scripts, as Well as Implementations of "Stack" and "StackList" Structures 
+library(beepr) # Easily Play Notification Sounds on any Platform 
+library(snowfall) # Easier Cluster Computing (Based on 'snow')
+
+#library(ggmcmc)
+library(camtrapR)
+library(tidyverse)
+
+```
+
+## Fitting a Multi-Species non Spatial Occupancy Model
+### Llanganates data 
+Here we use the tables Ecu-14, Ecu-15  y Ecu-16.
+
+```{r}
+
+source("C:/CodigoR/WCS-CameraTrap/R/organiza_datos_v3.R")
+
+AP_Llanganates <- read_sf("C:/CodigoR/Occu_APs/shp/Llanganates/WDPA_WDOECM_May2025_Public_97512_shp-polygons.shp")
+
+### Ecu 14, Ecu 15  y Ecu 16
+
+# load data and make array_locID column
+Ecu_14 <- loadproject("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-014.xlsx") |> mutate(array_locID=paste("Ecu_14", locationID, sep="_"))
+Ecu_15 <- loadproject("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-015.xlsx")|> mutate(array_locID=paste("Ecu_15", locationID, sep="_"))
+Ecu_16 <- loadproject("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-016.xlsx")|> mutate(array_locID=paste("Ecu_16", locationID, sep="_"))
+
+
+
+# get sites
+Ecu_14_sites <- get.sites("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-014.xlsx")
+Ecu_15_sites <- get.sites("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-015.xlsx")
+Ecu_16_sites <- get.sites("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-016.xlsx")
+
+
+
+
+# get elevation map
+elevation_14 <- rast(get_elev_raster(Ecu_14_sites, z = 7)) #z =1-14
+bb <-  st_as_sfc(st_bbox(elevation_14)) # make bounding box 
+
+
+
+
+# extract covs using points and add to _sites
+covs_Ecu_14_sites <- cbind(Ecu_14_sites, terra::extract(elevation_14, Ecu_14_sites))
+
+covs_Ecu_15_sites <- cbind(Ecu_15_sites, terra::extract(elevation_14, Ecu_15_sites))
+
+covs_Ecu_16_sites <- cbind(Ecu_16_sites, terra::extract(elevation_14, Ecu_16_sites))
+
+# get which are in and out
+covs_Ecu_14_sites$in_AP = st_intersects(covs_Ecu_14_sites, AP_Llanganates, sparse = FALSE)
+
+covs_Ecu_15_sites$in_AP = st_intersects(covs_Ecu_15_sites, AP_Llanganates, sparse = FALSE)
+
+covs_Ecu_16_sites$in_AP = st_intersects(covs_Ecu_16_sites, AP_Llanganates, sparse = FALSE)
+
+
+
+# make a map
+mapview (elevation_14, alpha=0.5) + 
+  mapview (AP_Llanganates, color = "green", col.regions = "green", alpha = 0.5) +
+  mapview (covs_Ecu_14_sites, zcol = "in_AP", col.regions =c("red","blue"), burst = TRUE) +
+  mapview (covs_Ecu_15_sites, zcol = "in_AP", burst = TRUE, col.regions = c("blue") )+
+  mapview (covs_Ecu_16_sites, zcol = "in_AP", burst = TRUE, col.regions =c("red","blue")) 
+  
+
+
+```
+
+### Camera trap operation data and detection history
+
+```{r}
+# Join 3 tables
+Ecu_14_15_16 <- Ecu_14 |> full_join(Ecu_15) |> full_join(Ecu_16)
+
+# fix date format
+# 
+Ecu_14_15_16$start_date <- as.Date(Ecu_14_15_16$start_date, "%Y/%m/%d")
+Ecu_14_15_16$end_date <- as.Date(Ecu_14_15_16$end_date, "%Y/%m/%d")
+Ecu_14_15_16$eventDate <- as.Date(Ecu_14_15_16$Date_Time_Captured, "%Y-%m-%d")
+Ecu_14_15_16$eventDateTime <- ymd_hms(Ecu_14_15_16$Date_Time_Captured)
+
+
+# filter 2021 and make uniques
+CToperation  <- Ecu_14_15_16 |> group_by(array_locID) |> 
+                           mutate(minStart=start_date, maxEnd=end_date) |> distinct(Longitude, Latitude, minStart, maxEnd) |> ungroup()
+
+
+# Generamos la matríz de operación de las cámaras
+
+camop <- cameraOperation(CTtable= CToperation, # Tabla de operación
+                         stationCol= "array_locID", # Columna que define la estación
+                         setupCol= "minStart", #Columna fecha de colocación
+                         retrievalCol= "maxEnd", #Columna fecha de retiro
+                         #hasProblems= T, # Hubo fallos de cámaras
+                         dateFormat= "%Y-%m-%d") #, # Formato de las fechas
+                         #cameraCol="CT")
+                         # sessionCol= "Year")
+
+# Generar las historias de detección ---------------------------------------
+## remove plroblem species
+ind <- which(Ecu_14_15_16$scientificName=="Set up")
+Ecu_14_15_16 <- Ecu_14_15_16[-ind,]
+
+ind <- which(Ecu_14_15_16$scientificName=="Blank")
+Ecu_14_15_16 <- Ecu_14_15_16[-ind,]
+
+ind <- which(Ecu_14_15_16$scientificName=="Unknown")
+Ecu_14_15_16 <- Ecu_14_15_16[-ind,]
+
+
+
+
+
+DetHist_list <- lapply(unique(Ecu_14_15_16$scientificName), FUN = function(x) {
+  detectionHistory(
+    recordTable         = Ecu_14_15_16, # Tabla de registros
+    camOp                = camop, # Matriz de operación de cámaras
+    stationCol           = "array_locID",
+    speciesCol           = "scientificName",
+    recordDateTimeCol    = "eventDateTime",
+    recordDateTimeFormat  = "%Y-%m-%d %H:%M:%S",
+    species              = x,     # la función reemplaza x por cada una de las especies
+    occasionLength       = 7, # Colapso de las historias a 10 ías
+    day1                 = "station", # "survey" a specific date, "station", #inicie en la fecha de cada survey
+    datesAsOccasionNames = FALSE,
+    includeEffort        = TRUE,
+    scaleEffort          = TRUE,
+    #unmarkedMultFrameInput=TRUE
+    timeZone             = "America/Bogota" 
+    )
+  }
+)
+
+# names
+names(DetHist_list) <- unique(Ecu_14_15_16$scientificName)
+
+# Finalmente creamos una lista nueva donde estén solo las historias de detección
+ylist <- lapply(DetHist_list, FUN = function(x) x$detection_history)
+# otra lista con effort scaled
+efort <- lapply(DetHist_list, FUN = function(x) x$effort)
+
+# Total number of observations for each species
+lapply(ylist, sum, na.rm = TRUE)
+
+
+
+```
+
+
+### Arrange spatial covariates
+
+```{r}
+
+# make sf()
+full_sites_14_15_16_sf <- CToperation |> 
+    st_as_sf(coords = c("Longitude", "Latitude"), 
+              crs = 4326)
+
+# extract elev
+full_sites_14_15_16_sf$elev <- terra::extract(elevation_14, full_sites_14_15_16_sf)[,2]
+str(full_sites_14_15_16_sf$elev)
+
+# extract in AP
+full_sites_14_15_16_sf$in_AP = as.factor(st_intersects(full_sites_14_15_16_sf, AP_Llanganates, sparse = FALSE))
+
+in_AP <- as.numeric(as.vector(st_drop_geometry(full_sites_14_15_16_sf$in_AP)))
+
+# mapview(full_sites_14_15_16_sf, zcol = "in_AP", burst = TRUE)
+
+# Transform coord to UTM Z17 Ecuador EPSG:32717 WGS 84 / UTM zone 17S
+full_sites_14_15_16_sf_UTM <- st_transform(full_sites_14_15_16_sf, "EPSG:32717")
+
+coords <- st_coordinates(full_sites_14_15_16_sf_UTM)
+#str(coords)
+
+# make Ecu_14_15_16 an sf object
+#    cam_sf <- st_as_sf(Ecu_14_15_16, coords = c("lon","lat"))   #crs="EPSG:4326")
+    #--- set CRS ---#
+#    st_crs(cam_sf) <- 4326
+
+#transform llanganates to UTM
+AP_Llanganates_UTM <- st_transform(AP_Llanganates, "EPSG:32717")
+# Convert to LINESTRING
+AP_Llanganates_UTM_line <- st_cast(AP_Llanganates_UTM, "LINESTRING")
+
+# Calculate the distance
+#multiplic <- full_sites_14_15_16_sf_UTM |> mutate(multiplic= as.numeric(in_AP)) 
+multiplic=ifelse(full_sites_14_15_16_sf_UTM$in_AP=="TRUE",-1,1)
+full_sites_14_15_16_sf_UTM$border_dist <- as.numeric(st_distance(full_sites_14_15_16_sf_UTM, AP_Llanganates_UTM_line) * multiplic )
+# print(border_dist)
+
+str(full_sites_14_15_16_sf_UTM$border_dist)
+
+                    
+
+```
+
+### Prepare the model
+
+```{r}
+# Detection-nondetection data ---------
+# Species of interest, can select individually
+# curr.sp <- sort(unique(Ecu_14_15_16$.id))# c('BAWW', 'BLJA', 'GCFL')
+selected.sp <-  c("Canis familiaris", 
+              "Cuniculus paca",
+              "Cuniculus taczanowskii",
+              "Dasyprocta fuliginosa",
+              "Eira barbara",
+              "Herpailurus yagouaroundi",
+              "Mazama murelia",
+              "Mazama rufina",
+              "Mazama zamora",
+              "Nasuella olivacea",
+              "Odocoileus ustus",
+              "Pecari tajacu",
+              "Pseudalopex culpaeus",
+              "Pudu mephistophiles",
+              "Puma concolor",
+              "Tapirus pinchaque",
+              "Tayassu pecari",
+              "Tremarctos ornatus")
+
+# y.msom <- y[which(sp.codes %in% selected.sp), , ]
+# str(y.msom)
+
+
+#### site covs
+sitecovs <- as.data.frame(st_drop_geometry(
+                    full_sites_14_15_16_sf_UTM[,5:7]))
+ sitecovs[, 1] <- as.vector(scale(sitecovs[,1]))   # scale numeric covariates
+ sitecovs[, 3] <- as.vector(scale(sitecovs[,3]))   # scale numeric covariates
+ # sitecovs$fact <- factor(c("A", "A", "B"))    # categorical covariate
+
+names(sitecovs) <- c("elev", "in_AP", "border_dist")
+
+# check consistancy equal number of spatial covariates and rows in data
+# identical(nrow(ylist[[1]]), nrow(covars)) 
+
+# Base de datos para los análisis -----------------------------------------
+
+data_list <- list(ylist    = ylist, # Historias de detección
+                  siteCovs = sitecovs, #covars, # Covariables de sitio
+                  obsCovs  = list(effort = DetHist_list[[1]]$effort))  # agregamos el esfuerzo de muestreo como covariable de observación
+
+# 3. 1 Modelo multi-especie  -----------------------------------------
+
+# Se creará un txt temporal donde estarán las especificaciones del modelo Bayesiano en JAGS
+modelfile <- (fileext = "modoccu.txt")
+
+# Usaremos la función ` communityModel`
+
+# Generemos el modelo
+comu_model <- communityModel(data_list, # la lista de datos
+                             occuCovs = list(ranef=c("border_dist", "elev", "in_AP")), # ranef La covariables de sitio
+                             detCovsObservation = list(fixed = "effort"), #Covariables de observación
+                             intercepts = list(det = "ranef", occu = "ranef"),
+                             # augmentation = c(full = 30),# Número aumentado de especies
+                             modelFile = "modelfile")
+
+summary(comu_model)
+
+
+
+```
+
+### Running the model
+
+```{r}
+# Running the model
+
+fit.commu <- fit(comu_model,
+                 n.iter = 100000,
+                 n.burnin = 10000,
+                 thin = 50,
+                 chains = 3,
+                 cores = 3,
+                 quiet = T
+);beep(sound = 4)
+
+# save the results to not run again
+save(fit.commu, file="C:/CodigoR/Occu_APs/Occu_APs_blog/posts/2nd_model_1AP/result/DR_result.R") # guardamos los resultados para no correr de nuevo
+```
+### Results as table 
+
+```{r}
+
+# Resultados --------------------------------------------------------------
+
+# Extraemos lo tabla de valores estimados
+modresult <- as.data.frame(summary(fit.commu)[["statistics"]])
+# View(modresult)
+DT::datatable(round(summary(fit.commu)$statistics, 3))
+```
+ 
+ Bayesian p-values can be inspected to check for lack of fit (overall or by species). Lack of fit at significance level = 0.05 is indicated by Bayesian p-values below 0.025 or greater than 0.975. The overall Bayesian p-value (Bpvalue) indicates no problems with lack of fit. Likewise, species-level Bayesian p-values (Bpvalue_species) indicate no lack of fit for any species.
+ 
+### Results as graph
+
+```{r}
+# Gráficos de predicción y de coeficientes
+
+# Otra gran ventaja de CamtrapR es que permite gráficar de manera muy sencilla la predicción posterior del modelo. Veamos que pasa con la ocupación de cada especie
+
+plot_effects(comu_model,
+              fit.commu,
+              submodel = "det",
+             combine = T)
+# $effort
+
+
+plot_coef(comu_model,
+           fit.commu,
+           submodel = "state",
+           combine = T)
+# $occupancy
+
+
+
+plot_effects(comu_model, # El modelo
+             fit.commu, # El objeto ajustado
+             submodel = "state",
+             response = "occupancy") # el parámetro de interés
+#> $rough
+#> 
+
+```
+
+
+Here we should see all Rhat values are less than 1.1 and the ESS values indicating adequate mixing of the MCMC chains.
+
+
+
+
+
+
+
+
+## Package Citation
+
+```{r}
+#| code-fold: true
+pkgs <- cite_packages(output = "paragraph", pkgs="Session", out.dir = ".")
+# knitr::kable(pkgs)
+pkgs
+```
+
+## Sesion info
+
+::: {.callout-note collapse=true}
+```{r}
+print(sessionInfo(), locale = FALSE)
+```
+:::
+
+

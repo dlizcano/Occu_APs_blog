@@ -1,0 +1,130 @@
+"0","# Posterior predictive checks"
+"0","# Approx. run time: 20 sec"
+"0","# ppc.ms.out <- ppcOcc(out.msom, 'chi-squared', group = 1)"
+"0","# summary(ppc.ms.out)"
+"0",""
+"0","# Takes a few seconds to run."
+"0","ppc.sp.ms.out <- ppcOcc(out.msom, 'freeman-tukey', group = 2)"
+"2","Currently on species 1 out of 18
+"
+"2","Currently on species 2 out of 18
+"
+"2","Currently on species 3 out of 18
+"
+"2","Currently on species 4 out of 18
+"
+"2","Currently on species 5 out of 18
+"
+"2","Currently on species 6 out of 18
+"
+"2","Currently on species 7 out of 18
+"
+"2","Currently on species 8 out of 18
+"
+"2","Currently on species 9 out of 18
+"
+"2","Currently on species 10 out of 18
+"
+"2","Currently on species 11 out of 18
+"
+"2","Currently on species 12 out of 18
+"
+"2","Currently on species 13 out of 18
+"
+"2","Currently on species 14 out of 18
+"
+"2","Currently on species 15 out of 18
+"
+"2","Currently on species 16 out of 18
+"
+"2","Currently on species 17 out of 18
+"
+"2","Currently on species 18 out of 18
+"
+"0","summary(ppc.sp.ms.out, level = 'both')"
+"1","
+Call:"
+"1","
+"
+"1","ppcOcc(object = out.msom, fit.stat = ""freeman-tukey"", "
+"1","
+"
+"1","    group = 2)"
+"1","
+"
+"1",""
+"1","
+"
+"1","Samples per Chain: 25000
+"
+"1","Burn-in: 5000
+"
+"1","Thinning Rate: 20
+"
+"1","Number of Chains: 3
+"
+"1","Total Posterior Samples: 3000
+
+"
+"1","----------------------------------------
+"
+"1","	Community Level
+"
+"1","----------------------------------------
+"
+"1","Bayesian p-value: "
+"1"," "
+"1","0.1648"
+"1"," "
+"1","
+"
+"1","
+"
+"1","----------------------------------------
+"
+"1","	Species Level
+"
+"1","----------------------------------------
+"
+"1","Canis familiaris Bayesian p-value: 0.1197
+"
+"1","Cuniculus paca Bayesian p-value: 0.1137
+"
+"1","Cuniculus taczanowskii Bayesian p-value: 0.2083
+"
+"1","Dasyprocta fuliginosa Bayesian p-value: 0.115
+"
+"1","Eira barbara Bayesian p-value: 0.1153
+"
+"1","Herpailurus yagouaroundi Bayesian p-value: 0.118
+"
+"1","Mazama murelia Bayesian p-value: 0.117
+"
+"1","Mazama rufina Bayesian p-value: 0.1987
+"
+"1","Mazama zamora Bayesian p-value: 0.12
+"
+"1","Nasuella olivacea Bayesian p-value: 0.2137
+"
+"1","Odocoileus ustus Bayesian p-value: 0.2003
+"
+"1","Pecari tajacu Bayesian p-value: 0.1173
+"
+"1","Pseudalopex culpaeus Bayesian p-value: 0.21
+"
+"1","Pudu mephistophiles Bayesian p-value: 0.2077
+"
+"1","Puma concolor Bayesian p-value: 0.1927
+"
+"1","Tapirus pinchaque Bayesian p-value: 0.2087
+"
+"1","Tayassu pecari Bayesian p-value: 0.117
+"
+"1","Tremarctos ornatus Bayesian p-value: 0.2737
+"
+"1","Fit statistic: "
+"1"," "
+"1","freeman-tukey"
+"1"," "
+"1","
+"

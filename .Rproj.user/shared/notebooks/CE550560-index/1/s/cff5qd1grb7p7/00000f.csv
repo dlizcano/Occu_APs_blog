@@ -1,0 +1,19 @@
+"0","# get elevation map
+elevation_14 <- rast(get_elev_raster(Ecu_14_sites, z = 7)) #z =1-14
+"
+"2",""
+"2"," Accessing raster elevation [-------------------------]   0%"
+"2","                                                            "
+"2",""
+"1",""
+"2",""
+"2"," Accessing raster elevation [-------------------------]   0%"
+"2",""
+"2"," Accessing raster elevation [=========================] 100%"
+"2","
+"
+"1",""
+"2","Mosaicing & Projecting
+"
+"2","Note: Elevation units are in meters.
+"

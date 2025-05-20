@@ -1,0 +1,513 @@
+---
+title: "Fitting a Multi-Species Spatial Occupancy Model"
+subtitle: "Using Llanganates subset of the WCS camera trap dataset"
+lightbox: true
+author: 
+  - name: German Forero
+    orcid: https://orcid.org/0000-0001-9952-7221
+  - name: Galo Zapara-Rios
+    orcid: https://orcid.org/0000-0003-3508-5078
+  - name: Diego J. Lizcano
+    orcid: https://orcid.org/0000-0002-9648-0576
+toc: true
+format: 
+  html:
+    code-fold: true
+    code-block-bg: true
+    code-block-border-left: "#31BAE9"
+license: CC BY-SA
+date: "2025-05-15"
+execute:
+  freeze: true
+citation: true
+google-scholar: true
+bibliography: grateful-refs.bib
+bibliographystyle: https://www.zotero.org/styles/tapir-conservation
+categories: [model, code, analysis]
+image: "image.png"
+---
+
+## Multi-species occupancy model using spOccupancy
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| warning: false
+#| message: false
+#| 
+library(grateful)
+library(readxl)
+library(DT)
+library(sf)
+library(mapview)
+library(maps)
+library(tmap)
+library(terra)
+library(elevatr)
+library(spOccupancy)
+library(bayesplot)
+#library(ggmcmc)
+
+library(tidyverse)
+
+```
+
+## Fitting a Multi-Species Spatial Occupancy Model
+
+### Llanganates data
+
+```{r}
+
+source("C:/CodigoR/WCS-CameraTrap/R/organiza_datos_v3.R")
+
+AP_Llanganates <- read_sf("C:/CodigoR/Occu_APs/shp/Llanganates/WDPA_WDOECM_May2025_Public_97512_shp-polygons.shp")
+
+### Ecu 14, Ecu 14  y Ecu 16
+
+# load data
+Ecu_14 <- loadproject("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-014.xlsx")
+Ecu_15 <- loadproject("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-015.xlsx")
+Ecu_16 <- loadproject("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-016.xlsx")
+
+
+
+# get sites
+Ecu_14_sites <- get.sites("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-014.xlsx")
+Ecu_15_sites <- get.sites("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-015.xlsx")
+Ecu_16_sites <- get.sites("F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-016.xlsx")
+
+
+
+
+# get elevation map
+elevation_14 <- rast(get_elev_raster(Ecu_14_sites, z = 7)) #z =1-14
+bb <-  st_as_sfc(st_bbox(elevation_14)) # make bounding box 
+
+
+
+
+# extract covs using points and add to _sites
+covs_Ecu_14_sites <- cbind(Ecu_14_sites, terra::extract(elevation_14, Ecu_14_sites))
+
+covs_Ecu_15_sites <- cbind(Ecu_15_sites, terra::extract(elevation_14, Ecu_15_sites))
+
+covs_Ecu_16_sites <- cbind(Ecu_16_sites, terra::extract(elevation_14, Ecu_16_sites))
+
+# get which are in and out
+covs_Ecu_14_sites$in_AP = st_intersects(covs_Ecu_14_sites, AP_Llanganates, sparse = FALSE)
+
+covs_Ecu_15_sites$in_AP = st_intersects(covs_Ecu_15_sites, AP_Llanganates, sparse = FALSE)
+
+covs_Ecu_16_sites$in_AP = st_intersects(covs_Ecu_16_sites, AP_Llanganates, sparse = FALSE)
+
+
+
+# make a map
+mapview (elevation_14, alpha=0.5) + 
+  mapview (AP_Llanganates, color = "green", col.regions = "green", alpha = 0.5) +
+  mapview (covs_Ecu_14_sites, zcol = "in_AP", col.regions =c("red","blue"), burst = TRUE) +
+  mapview (covs_Ecu_15_sites, zcol = "in_AP", burst = TRUE, col.regions = c("blue") )+
+  mapview (covs_Ecu_16_sites, zcol = "in_AP", burst = TRUE, col.regions =c("red","blue")) 
+  
+
+
+```
+
+### Detection history
+
+```{r}
+
+# check duplicateds in sites
+ind1 <- as.vector(which(table(Ecu_15_sites$Point)>=2))# duplicated
+ind <- which(Ecu_15_sites$Point==ind1)# match
+Ecu_15_sites <- Ecu_15_sites[-ind,]# remove
+
+
+
+Ecu_14_historias <- wcs.det_history.creator(data=Ecu_14)
+# sp_number <- which(names(Ecu_14_historias)=="Tremarctos ornatus")
+Ecu_15_historias <- wcs.det_history.creator(data=Ecu_15)
+# sp_number <- which(names(Ecu_14_historias)=="Tremarctos ornatus")
+Ecu_16_historias <- wcs.det_history.creator(data=Ecu_16)
+# sp_number <- which(names(Ecu_14_historias)=="Tremarctos ornatus")
+
+
+
+# make data frame for each
+library (plyr)
+Ecu_14_df <- ldply (Ecu_14_historias)
+Ecu_14_df$site <- paste("Ecu_14", 1:29, sep="_")#sites
+Ecu_14_df$lat <- rep(as.data.frame(st_coordinates(Ecu_14_sites))[,"Y"], 25) #sp
+Ecu_14_df$lon <- as.data.frame(st_coordinates(Ecu_14_sites))[,"X"]
+
+
+Ecu_15_df <- ldply (Ecu_15_historias)
+Ecu_15_df$site <- paste("Ecu_15", 1:30, sep="_")#site
+Ecu_15_df$lat <- rep(as.data.frame(st_coordinates(Ecu_15_sites))[,"Y"], 13) #sp
+Ecu_15_df$lon <- as.data.frame(st_coordinates(Ecu_15_sites))[,"X"]
+
+
+Ecu_16_df <- ldply (Ecu_16_historias)
+Ecu_16_df$site <- paste("Ecu_16", 1:28, sep="_")#site
+Ecu_16_df$lat <- rep(as.data.frame(st_coordinates(Ecu_16_sites))[,"Y"], 16) #sp
+Ecu_16_df$lon <- as.data.frame(st_coordinates(Ecu_16_sites))[,"X"]
+
+
+# rbind cuted by por 45 dias de muestreo
+Ecu_14_15_16 <- rbind(Ecu_14_df[,-(47:52)],
+                      Ecu_15_df[,-(47:54)],
+                      Ecu_16_df[,-(47:107)])
+
+# remove non species
+# filter(id != 2) # or filter(!id == 2)
+Ecu_14_15_16 <- Ecu_14_15_16 |> 
+                  filter(.id != "Set up" ) |> 
+                  filter(.id != "Blank" )  |> 
+                  filter(.id != "Unknown" )
+
+
+####################
+# Make empty array
+####################
+# Species codes.
+sp.codes <- sort(unique(Ecu_14_15_16$.id))
+# Plot (site) codes.
+plot.codes <- sort(unique(Ecu_14_15_16$site))
+# Number of species
+N <- length(sp.codes) #total sp
+# Maximum number of replicates at a site
+K <- 45
+# Number of sites
+J <- length(unique(Ecu_14_15_16$site))
+# Array for detection-nondetection data. 
+y <- array(NA, dim = c(N, J, K))
+# Label the dimensions of y (not necessary, but helpful)
+dimnames(y)[[1]] <- sp.codes
+dimnames(y)[[2]] <- plot.codes
+# Look at the structure of our array y
+str(y)
+
+########### feed the empty array
+for (j in 1:J) { # Loop through sites.
+  for (k in 1:K) { # Loop through replicates at each site.
+    # Extract data for current site/replicate combination.
+    curr.df <- Ecu_14_15_16 %>%
+      filter(site == plot.codes[j])
+    # Check if more than one date for a given replicate
+    #if (n_distinct(curr.df$Date) > 1) {
+      # If there is more than 1 date, only use the data
+      # from the first date.
+    #  curr.dates <- unique(sort(curr.df$Date))
+    #  curr.df <- curr.df %>% 
+     #   filter(Date == curr.dates[1])
+     #}
+    # If plot j was sampled during replicate k, 
+    # curr.df will have at least 1 row (i.e., at least 
+    # one species will be observed). If not, assume it 
+    # was not sampled for that replicate.
+    if (nrow(curr.df) > 0) {
+      # Extract the species that were observed during
+      # this site/replicate.
+      selected.sp <- which(sp.codes %in% curr.df$.id)
+      # Set value to 1 for species that were observed.
+      y[selected.sp, j, k] <- 1
+      # Set value to 0 for all other species.
+      y[-selected.sp, j, k] <- 0
+    }
+  } # k (replicates)
+} # j (sites)
+str(y)
+
+# Total number of observations for each species
+apply(y, 1, sum, na.rm = TRUE)
+
+
+
+
+# Union coordiantes all sites
+full_sites_14_15_16 <- as.data.frame(cbind(
+  lat=unique(Ecu_14$Latitude), 
+  lon=unique(Ecu_14$Longitude) )) |> 
+                       rbind(as.data.frame(cbind(
+  lat=unique(Ecu_15$Latitude), 
+  lon=unique(Ecu_15$Longitude) )))|> 
+            rbind(as.data.frame(cbind(
+  lat=unique(Ecu_16$Latitude), 
+  lon=unique(Ecu_16$Longitude) )))
+
+# put name
+full_sites_14_15_16$site <- unique(Ecu_14_15_16$site)
+# make sf()
+full_sites_14_15_16_sf = st_as_sf(full_sites_14_15_16, 
+                                  coords = c("lon", "lat"), 
+                                  crs = 4326)
+
+# extract elev
+elev <- terra::extract(elevation_14, full_sites_14_15_16_sf)[,2]
+str(elev)
+
+# extract in AP
+full_sites_14_15_16_sf$in_AP = st_intersects(full_sites_14_15_16_sf, AP_Llanganates, sparse = FALSE)
+
+in_AP <- as.numeric(as.vector(st_drop_geometry(full_sites_14_15_16_sf$in_AP)))
+
+# mapview(full_sites_14_15_16_sf, zcol = "in_AP", burst = TRUE)
+
+# Transform coord to UTM Z17 Ecuador EPSG:32717 WGS 84 / UTM zone 17S
+
+full_sites_14_15_16_sf_UTM <- st_transform(full_sites_14_15_16_sf, "EPSG:32717")
+
+coords <- st_coordinates(full_sites_14_15_16_sf_UTM)
+str(coords)
+
+# make Ecu_14_15_16 an sf object
+#    cam_sf <- st_as_sf(Ecu_14_15_16, coords = c("lon","lat"))   #crs="EPSG:4326")
+    #--- set CRS ---#
+#    st_crs(cam_sf) <- 4326
+
+#transform llanganates to UTM
+AP_Llanganates_UTM <- st_transform(AP_Llanganates, "EPSG:32717")
+# Convert to LINESTRING
+AP_Llanganates_UTM_line <- st_cast(AP_Llanganates_UTM, "LINESTRING")
+
+# Calculate the distance
+#multiplic <- full_sites_14_15_16_sf_UTM |> mutate(multiplic= as.numeric(in_AP)) 
+multiplic=ifelse(full_sites_14_15_16_sf_UTM$in_AP=="TRUE",-1,1)
+border_dist <- st_distance(full_sites_14_15_16_sf_UTM, AP_Llanganates_UTM_line) * multiplic 
+# print(border_dist)
+
+
+
+                    
+
+```
+
+### pack in object
+
+```{r}
+# Detection-nondetection data ---------
+# Species of interest, can select individually
+# curr.sp <- sort(unique(Ecu_14_15_16$.id))# c('BAWW', 'BLJA', 'GCFL')
+selected.sp <-  c("Canis familiaris", 
+              "Cuniculus paca",
+              "Cuniculus taczanowskii",
+              "Dasyprocta fuliginosa",
+              "Eira barbara",
+              "Herpailurus yagouaroundi",
+              "Mazama murelia",
+              "Mazama rufina",
+              "Mazama zamora",
+              "Nasuella olivacea",
+              "Odocoileus ustus",
+              "Pecari tajacu",
+              "Pseudalopex culpaeus",
+              "Pudu mephistophiles",
+              "Puma concolor",
+              "Tapirus pinchaque",
+              "Tayassu pecari",
+              "Tremarctos ornatus")
+
+y.msom <- y[which(sp.codes %in% selected.sp), , ]
+str(y.msom)
+
+# Number of species
+N <- length(selected.sp) # number of selectes sp
+
+# Distances between sites
+dist.hbef <- dist(coords)
+
+# Detection covariates ----------------
+# det.covs <- list(day = hb.day, 
+#                 tod = hb.tod)
+# str(det.covs)
+
+# Occurrence covariates ---------------
+occ.covs <- data.frame(elev,  border_dist) # as.factor(in_AP),
+
+names(occ.covs) <- c("elev","border_dist")# "in_AP",
+str(occ.covs)
+
+
+# pack all
+
+# Package all data into list object
+data.msom <- list(y = y.msom, 
+                  occ.covs = occ.covs, 
+                  #det.covs = det.covs, 
+                  coords = coords)
+
+#### Inits
+ms.inits <- list(alpha.comm = 0, 
+                 beta.comm = 0, 
+                 beta = 0, 
+                 alpha = 0,
+                 tau.sq.beta = 1, 
+                 tau.sq.alpha = 1, 
+                 z = apply(y.msom, c(1, 2), max, na.rm = TRUE), 
+                 sigma.sq = 2, 
+                 phi = 3 / mean(dist.hbef), 
+                 w = matrix(0, N, dim(y.msom)[2])
+                 )
+
+# priors
+# Minimum value is 0, so need to grab second element.
+min.dist <- sort(unique(dist.hbef))[2]
+max.dist <- max(dist.hbef)
+ms.priors <- list(beta.comm.normal = list(mean = 0, var = 2.72),
+                  alpha.comm.normal = list(mean = 0, var = 2.72), 
+                  tau.sq.beta.ig = list(a = 0.1, b = 0.1), 
+                  tau.sq.alpha.ig = list(a = 0.1, b = 0.1),
+                  sigma.sq.ig = list(a = 2, b = 2), 
+                  phi.unif = list(a = 3 / max.dist, b = 3 / min.dist))
+
+
+# Thus, the total number of MCMC samples is n.batch * batch.length. Typically, we set batch.length = 25 and then play around with n.batch until convergence is reached. Here we set n.batch = 800 for a total of 20000 MCMC samples.
+
+# We next set the parameters controlling the Adaptive MCMC algorithm
+batch.length <- 25
+n.batch <- 4000 #800  #1000*25=25.000
+n.burn <- 1000
+n.thin <- 50
+n.chains <- 3
+ms.tuning <- list(phi = 0.25)
+n.omp.threads <- 3 # procesadores
+# Values for reporting
+verbose <- TRUE
+n.report <- 100
+
+
+
+out.msom <- spMsPGOcc(occ.formula = ~ 
+                        scale(elev) + 
+                        I(scale(elev)^2) + 
+                        scale(border_dist) , 
+                      det.formula = ~1,# ~ scale(day) + I(scale(day)^2) + scale(tod), 
+                      data = data.msom,
+                      inits = ms.inits,
+                      n.burn = n.burn,
+                      n.batch = n.batch, 
+                      batch.length = batch.length, 
+                      accept.rate = 0.43,
+                      priors = ms.priors,
+                      n.omp.threads = n.omp.threads,
+                      n.chains = n.chains,
+                      cov.model = 'exponential', 
+                      tuning = ms.tuning, 
+                      NNGP = TRUE, 
+                      verbose = TRUE,
+                      n.report = n.report,
+                      n.neighbors = 5, 
+                      n.thin = n.thin
+                      
+                      ) 
+
+summary(out.msom, level = 'both')#level = 'community')
+
+
+
+```
+
+Here we should see all Rhat values are less than 1.1 and the ESS values indicating adequate mixing of the MCMC chains.
+
+### Posterior predictive checks
+
+We generate a Bayesian p-value as a quick assessment of model fit. A Bayesian p-value that hovers around 0.5 indicates adequate model fit, while values less than 0.1 or greater than 0.9 suggest our model does not fit the data well.
+
+```{r}
+# Posterior predictive checks
+# Approx. run time: 20 sec
+# ppc.ms.out <- ppcOcc(out.msom, 'chi-squared', group = 1)
+# summary(ppc.ms.out)
+
+# Takes a few seconds to run.
+ppc.sp.ms.out <- ppcOcc(out.msom, 'freeman-tukey', group = 2)
+summary(ppc.sp.ms.out, level = 'both')
+
+
+```
+
+### Effect plots
+
+```{r}
+### plots
+# plot(out.msom, 'alpha', density = FALSE) # Detection parameters.
+# mcmc_intervals(out$alpha.comm.samples)
+# mcmc_intervals(out$alpha.samples)
+
+# plot(out.msom, 'beta', density = TRUE) # Occupancy parameters.
+mcmc_intervals(out.msom$beta.comm.samples)
+mcmc_intervals(out.msom$beta.samples)
+
+
+
+
+
+# occupancy per selected species
+mcmc_areas(out.msom$beta.samples, 
+  pars = c("scale(border_dist)-Tapirus pinchaque", "scale(border_dist)-Cuniculus paca", "scale(border_dist)-Mazama rufina", "scale(border_dist)-Puma concolor", "scale(border_dist)-Canis familiaris"))
+
+# Full set species
+mcmc_areas(out.msom$beta.samples, 
+  pars = paste("scale(elev)", selected.sp, sep="-" ))
+
+# Full set species
+mcmc_areas(out.msom$beta.samples, 
+  pars = paste("I(scale(elev)^2)", selected.sp, sep="-" ))
+
+# Full set species
+mcmc_areas(out.msom$beta.samples, 
+  pars = paste("scale(border_dist)", selected.sp, sep="-" ))
+
+
+
+```
+
+### Model selection using WAIC and k-fold cross-validation
+
+```{r}
+waicOcc(out.ms) # full comunity
+waicOcc(out.ms, by.sp = TRUE) # by sp
+```
+
+### Prediction
+
+Prediction with spMsPGOcc objects again uses the predict() function given a set of covariates and spatial coordinates of a set of locations. Results are very similar to the nonspatial multi-species model.
+
+to slow....
+
+```{r}
+#| echo: false
+#| eval: false
+
+# Transform to UTM
+elevation_14_UTM <- project(elevation_14, "EPSG:32717")
+
+## S4 method for signature 'SpatRaster'
+llangaElev <- as.data.frame(elevation_14_UTM, 
+                            row.names=NULL, 
+                            xy=TRUE, 
+                            cells=FALSE, 
+                            time=FALSE)
+
+elev.pred <- (llangaElev[,3] - mean(elev)) / sd(elev)
+X.0 <- cbind(1, elev.pred)#, elev.pred^2) # here all covs
+coords.0 <- as.matrix(llangaElev[, c('x', 'y')]) #x and y
+out.sp.ms.pred <- predict(out.msom, X.0, coords.0)
+```
+
+## Package Citation
+
+```{r}
+#| code-fold: true
+pkgs <- cite_packages(output = "paragraph", pkgs="Session", out.dir = ".")
+# knitr::kable(pkgs)
+pkgs
+```
+
+## Sesion info
+
+::: {.callout-note collapse="true"}
+```{r}
+print(sessionInfo(), locale = FALSE)
+```
+:::

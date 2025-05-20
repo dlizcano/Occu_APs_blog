@@ -1,0 +1,597 @@
+{
+    "sources": [
+        {
+            "URL": "https://www.R-project.org/",
+            "author": [
+                {
+                    "literal": "R Core Team"
+                }
+            ],
+            "id": "base",
+            "issued": {
+                "date-parts": [
+                    [
+                        2024
+                    ]
+                ]
+            },
+            "publisher": "R Foundation for Statistical Computing",
+            "publisher-place": "Vienna, Austria",
+            "title": "R: A language and environment for statistical computing",
+            "title-short": "R",
+            "type": "book"
+        },
+        {
+            "URL": "https://mc-stan.org/bayesplot/",
+            "author": [
+                {
+                    "family": "Gabry",
+                    "given": "Jonah"
+                },
+                {
+                    "family": "Mahr",
+                    "given": "Tristan"
+                }
+            ],
+            "id": "bayesplot2024",
+            "issued": {
+                "date-parts": [
+                    [
+                        2024
+                    ]
+                ]
+            },
+            "note": "R package version 1.11.1",
+            "title": "bayesplot: Plotting for bayesian models",
+            "title-short": "bayesplot",
+            "type": ""
+        },
+        {
+            "DOI": "10.1111/rssa.12378",
+            "author": [
+                {
+                    "family": "Gabry",
+                    "given": "Jonah"
+                },
+                {
+                    "family": "Simpson",
+                    "given": "Daniel"
+                },
+                {
+                    "family": "Vehtari",
+                    "given": "Aki"
+                },
+                {
+                    "family": "Betancourt",
+                    "given": "Michael"
+                },
+                {
+                    "family": "Gelman",
+                    "given": "Andrew"
+                }
+            ],
+            "container-title": "J. R. Stat. Soc. A",
+            "id": "bayesplot2019",
+            "issued": {
+                "date-parts": [
+                    [
+                        2019
+                    ]
+                ]
+            },
+            "page": "389-402",
+            "title": "Visualization in bayesian workflow",
+            "type": "article-journal",
+            "volume": "182"
+        },
+        {
+            "DOI": "10.1111/2041-210X.12600",
+            "URL": "https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.12600",
+            "author": [
+                {
+                    "family": "Niedballa",
+                    "given": "Jürgen"
+                },
+                {
+                    "family": "Sollmann",
+                    "given": "Rahel"
+                },
+                {
+                    "family": "Courtiol",
+                    "given": "Alexandre"
+                },
+                {
+                    "family": "Wilting",
+                    "given": "Andreas"
+                }
+            ],
+            "container-title": "Methods in Ecology and Evolution",
+            "id": "camtrapR",
+            "issue": "12",
+            "issued": {
+                "date-parts": [
+                    [
+                        2016
+                    ]
+                ]
+            },
+            "page": "1457-1462",
+            "title": "camtrapR: An r package for efficient camera trap data management",
+            "title-short": "camtrapR",
+            "type": "article-journal",
+            "volume": "7"
+        },
+        {
+            "URL": "https://CRAN.R-project.org/package=DT",
+            "author": [
+                {
+                    "family": "Xie",
+                    "given": "Yihui"
+                },
+                {
+                    "family": "Cheng",
+                    "given": "Joe"
+                },
+                {
+                    "family": "Tan",
+                    "given": "Xianying"
+                }
+            ],
+            "id": "DT",
+            "issued": {
+                "date-parts": [
+                    [
+                        2024
+                    ]
+                ]
+            },
+            "note": "R package version 0.33",
+            "title": "DT: A wrapper of the JavaScript library “DataTables”",
+            "title-short": "DT",
+            "type": "book"
+        },
+        {
+            "DOI": "10.5281/zenodo.8335450",
+            "URL": "https://github.com/jhollist/elevatr/",
+            "author": [
+                {
+                    "family": "Hollister",
+                    "given": "Jeffrey"
+                },
+                {
+                    "family": "Shah",
+                    "given": "Tarak"
+                },
+                {
+                    "family": "Nowosad",
+                    "given": "Jakub"
+                },
+                {
+                    "family": "Robitaille",
+                    "given": "Alec L."
+                },
+                {
+                    "family": "Beck",
+                    "given": "Marcus W."
+                },
+                {
+                    "family": "Johnson",
+                    "given": "Mike"
+                }
+            ],
+            "id": "elevatr",
+            "issued": {
+                "date-parts": [
+                    [
+                        2023
+                    ]
+                ]
+            },
+            "note": "R package version 0.99.0",
+            "title": "elevatr: Access elevation data from various APIs",
+            "title-short": "elevatr",
+            "type": "book"
+        },
+        {
+            "URL": "https://CRAN.R-project.org/package=maps",
+            "author": [
+                {
+                    "dropping-particle": "code by",
+                    "family": "Richard A. Becker",
+                    "given": "Original S"
+                },
+                {
+                    "dropping-particle": "version by",
+                    "family": "Ray Brownrigg. Enhancements by Thomas P Minka",
+                    "given": "Allan R. Wilks. R"
+                },
+                {
+                    "family": "Deckmyn.",
+                    "given": "Alex"
+                }
+            ],
+            "id": "maps",
+            "issued": {
+                "date-parts": [
+                    [
+                        2024
+                    ]
+                ]
+            },
+            "note": "R package version 3.4.2.1",
+            "title": "maps: Draw geographical maps",
+            "title-short": "maps",
+            "type": "book"
+        },
+        {
+            "URL": "https://CRAN.R-project.org/package=mapview",
+            "author": [
+                {
+                    "family": "Appelhans",
+                    "given": "Tim"
+                },
+                {
+                    "family": "Detsch",
+                    "given": "Florian"
+                },
+                {
+                    "family": "Reudenbach",
+                    "given": "Christoph"
+                },
+                {
+                    "family": "Woellauer",
+                    "given": "Stefan"
+                }
+            ],
+            "id": "mapview",
+            "issued": {
+                "date-parts": [
+                    [
+                        2023
+                    ]
+                ]
+            },
+            "note": "R package version 2.11.2",
+            "title": "mapview: Interactive viewing of spatial data in r",
+            "title-short": "mapview",
+            "type": "book"
+        },
+        {
+            "URL": "https://www.jstatsoft.org/v40/i01/",
+            "author": [
+                {
+                    "family": "Wickham",
+                    "given": "Hadley"
+                }
+            ],
+            "container-title": "Journal of Statistical Software",
+            "id": "plyr",
+            "issue": "1",
+            "issued": {
+                "date-parts": [
+                    [
+                        2011
+                    ]
+                ]
+            },
+            "page": "1-29",
+            "title": "The split-apply-combine strategy for data analysis",
+            "type": "article-journal",
+            "volume": "40"
+        },
+        {
+            "DOI": "10.1201/9780429459016",
+            "URL": "https://r-spatial.org/book/",
+            "author": [
+                {
+                    "family": "Pebesma",
+                    "given": "Edzer"
+                },
+                {
+                    "family": "Bivand",
+                    "given": "Roger"
+                }
+            ],
+            "id": "sf2023",
+            "issued": {
+                "date-parts": [
+                    [
+                        2023
+                    ]
+                ]
+            },
+            "publisher": "Chapman and Hall/CRC",
+            "title": "Spatial Data Science: With applications in R",
+            "type": "book"
+        },
+        {
+            "DOI": "10.32614/RJ-2018-009",
+            "URL": "https://doi.org/10.32614/RJ-2018-009",
+            "author": [
+                {
+                    "family": "Pebesma",
+                    "given": "Edzer"
+                }
+            ],
+            "container-title": "The R Journal",
+            "id": "sf2018",
+            "issue": "1",
+            "issued": {
+                "date-parts": [
+                    [
+                        2018
+                    ]
+                ]
+            },
+            "page": "439-446",
+            "title": "Simple Features for R: Standardized Support for Spatial Vector Data",
+            "type": "article-journal",
+            "volume": "10"
+        },
+        {
+            "URL": "https://doi.org/10.1111/2041-210X.13897",
+            "author": [
+                {
+                    "family": "Doser",
+                    "given": "Jeffrey W."
+                },
+                {
+                    "family": "Finley",
+                    "given": "Andrew O."
+                },
+                {
+                    "family": "Kéry",
+                    "given": "Marc"
+                },
+                {
+                    "family": "Zipkin",
+                    "given": "Elise F."
+                }
+            ],
+            "container-title": "Methods in Ecology and Evolution",
+            "id": "spOccupancy2022",
+            "issued": {
+                "date-parts": [
+                    [
+                        2022
+                    ]
+                ]
+            },
+            "page": "1670-1678",
+            "title": "spOccupancy: An r package for single-species, multi-species, and integrated spatial occupancy models",
+            "title-short": "spOccupancy",
+            "type": "article-journal",
+            "volume": "13"
+        },
+        {
+            "URL": "https://doi.org/10.1002/ecy.4137",
+            "author": [
+                {
+                    "family": "Doser",
+                    "given": "Jeffrey W."
+                },
+                {
+                    "family": "Finley",
+                    "given": "Andrew O."
+                },
+                {
+                    "family": "Banerjee",
+                    "given": "Sudipto"
+                }
+            ],
+            "container-title": "Ecology",
+            "id": "spOccupancy2023",
+            "issued": {
+                "date-parts": [
+                    [
+                        2023
+                    ]
+                ]
+            },
+            "page": "e4137",
+            "title": "Joint species distribution models with imperfect detection for high-dimensional spatial data",
+            "type": "article-journal"
+        },
+        {
+            "URL": "https://doi.org/10.1007/s13253-023-00595-6",
+            "author": [
+                {
+                    "family": "Doser",
+                    "given": "Jeffrey W."
+                },
+                {
+                    "family": "Finley",
+                    "given": "Andrew O."
+                },
+                {
+                    "family": "Saunders",
+                    "given": "Sarah P."
+                },
+                {
+                    "family": "Kéry",
+                    "given": "Marc"
+                },
+                {
+                    "family": "Weed",
+                    "given": "Aaron S."
+                },
+                {
+                    "family": "Zipkin",
+                    "given": "Elise F."
+                }
+            ],
+            "container-title": "Journal of Agricultural, Biological, and Environmental Statistics",
+            "id": "spOccupancy2024",
+            "issued": {
+                "date-parts": [
+                    [
+                        2024
+                    ]
+                ]
+            },
+            "title": "Modeling complex species-environment relationships through spatially-varying coefficient occupancy models",
+            "type": "article-journal"
+        },
+        {
+            "URL": "https://CRAN.R-project.org/package=terra",
+            "author": [
+                {
+                    "family": "Hijmans",
+                    "given": "Robert J."
+                }
+            ],
+            "id": "terra",
+            "issued": {
+                "date-parts": [
+                    [
+                        2025
+                    ]
+                ]
+            },
+            "note": "R package version 1.8-21",
+            "title": "terra: Spatial data analysis",
+            "title-short": "terra",
+            "type": "book"
+        },
+        {
+            "DOI": "10.18637/jss.v084.i06",
+            "author": [
+                {
+                    "family": "Tennekes",
+                    "given": "Martijn"
+                }
+            ],
+            "container-title": "Journal of Statistical Software",
+            "id": "tmap",
+            "issue": "6",
+            "issued": {
+                "date-parts": [
+                    [
+                        2018
+                    ]
+                ]
+            },
+            "page": "1-39",
+            "title": "tmap: Thematic maps in R",
+            "title-short": "tmap",
+            "type": "article-journal",
+            "volume": "84"
+        },
+        {
+            "DOI": "10.21105/joss.01686",
+            "author": [
+                {
+                    "family": "Wickham",
+                    "given": "Hadley"
+                },
+                {
+                    "family": "Averick",
+                    "given": "Mara"
+                },
+                {
+                    "family": "Bryan",
+                    "given": "Jennifer"
+                },
+                {
+                    "family": "Chang",
+                    "given": "Winston"
+                },
+                {
+                    "family": "McGowan",
+                    "given": "Lucy D’Agostino"
+                },
+                {
+                    "family": "François",
+                    "given": "Romain"
+                },
+                {
+                    "family": "Grolemund",
+                    "given": "Garrett"
+                },
+                {
+                    "family": "Hayes",
+                    "given": "Alex"
+                },
+                {
+                    "family": "Henry",
+                    "given": "Lionel"
+                },
+                {
+                    "family": "Hester",
+                    "given": "Jim"
+                },
+                {
+                    "family": "Kuhn",
+                    "given": "Max"
+                },
+                {
+                    "family": "Pedersen",
+                    "given": "Thomas Lin"
+                },
+                {
+                    "family": "Miller",
+                    "given": "Evan"
+                },
+                {
+                    "family": "Bache",
+                    "given": "Stephan Milton"
+                },
+                {
+                    "family": "Müller",
+                    "given": "Kirill"
+                },
+                {
+                    "family": "Ooms",
+                    "given": "Jeroen"
+                },
+                {
+                    "family": "Robinson",
+                    "given": "David"
+                },
+                {
+                    "family": "Seidel",
+                    "given": "Dana Paige"
+                },
+                {
+                    "family": "Spinu",
+                    "given": "Vitalie"
+                },
+                {
+                    "family": "Takahashi",
+                    "given": "Kohske"
+                },
+                {
+                    "family": "Vaughan",
+                    "given": "Davis"
+                },
+                {
+                    "family": "Wilke",
+                    "given": "Claus"
+                },
+                {
+                    "family": "Woo",
+                    "given": "Kara"
+                },
+                {
+                    "family": "Yutani",
+                    "given": "Hiroaki"
+                }
+            ],
+            "container-title": "Journal of Open Source Software",
+            "id": "tidyverse",
+            "issue": "43",
+            "issued": {
+                "date-parts": [
+                    [
+                        2019
+                    ]
+                ]
+            },
+            "page": "1686",
+            "title": "Welcome to the tidyverse",
+            "type": "article-journal",
+            "volume": "4"
+        }
+    ],
+    "project_biblios": []
+}

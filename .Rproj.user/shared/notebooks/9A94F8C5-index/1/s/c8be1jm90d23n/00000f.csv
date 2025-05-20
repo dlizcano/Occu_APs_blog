@@ -1,0 +1,19 @@
+"0","Ecu_16 <- loadproject(""F:/WCS-CameraTrap/data/BDcorregidas/Ecuador/ECU-016.xlsx"")|> mutate(array_locID=paste(""Ecu_16"", locationID, sep=""_""))
+"
+"1","28 cameras in Cameras. 
+ 28 cameras in Deployment. 
+ 28 deployments in Deployment. 
+ 28 points in Deployment. 
+ 28 cameras in Images. 
+ 28 points in Images. 
+"
+"2","Joining with `by = join_by(Camera_Id)`"
+"1","[1]"
+"1"," ""dates ok"""
+"1","
+"
+"1","year: 2016 
+ Jaguar_Design: no"
+"1"," "
+"1","
+"

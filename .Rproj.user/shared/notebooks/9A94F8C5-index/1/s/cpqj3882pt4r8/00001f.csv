@@ -1,0 +1,7 @@
+"0","plot_coef(comu_model,
+           fit.commu,
+           submodel = ""state"",
+           combine = T)
+"
+"2","'combine' and 'ordered' can't both be TRUE. Setting 'ordered = FALSE'
+"

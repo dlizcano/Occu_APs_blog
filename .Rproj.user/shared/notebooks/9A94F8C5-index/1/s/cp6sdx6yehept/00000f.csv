@@ -1,0 +1,76 @@
+"0","ppc.out <- ppcOcc(out, fit.stat = 'freeman-tukey', group = 1)"
+"2","Currently on species 1 out of 6
+"
+"2","Currently on species 2 out of 6
+"
+"2","Currently on species 3 out of 6
+"
+"2","Currently on species 4 out of 6
+"
+"2","Currently on species 5 out of 6
+"
+"2","Currently on species 6 out of 6
+"
+"0","summary(ppc.out)"
+"1","
+Call:"
+"1","
+"
+"1","ppcOcc(object = out, fit.stat = ""freeman-tukey"", "
+"1","
+"
+"1","    group = 1)"
+"1","
+"
+"1",""
+"1","
+"
+"1","Samples per Chain: 3000
+"
+"1","Burn-in: 2000
+"
+"1","Thinning Rate: 1
+"
+"1","Number of Chains: 1
+"
+"1","Total Posterior Samples: 1000
+
+"
+"1","----------------------------------------
+"
+"1","	Community Level
+"
+"1","----------------------------------------
+"
+"1","Bayesian p-value: "
+"1"," "
+"1","0.4428"
+"1"," "
+"1","
+"
+"1","
+"
+"1","----------------------------------------
+"
+"1","	Species Level
+"
+"1","----------------------------------------
+"
+"1","sp1 Bayesian p-value: 0.513
+"
+"1","sp2 Bayesian p-value: 0.565
+"
+"1","sp3 Bayesian p-value: 0.463
+"
+"1","sp4 Bayesian p-value: 0.373
+"
+"1","sp5 Bayesian p-value: 0.328
+"
+"1","sp6 Bayesian p-value: 0.415
+"
+"1","Fit statistic: "
+"1"," "
+"1","freeman-tukey"
+"1"," "
+"1","
+"

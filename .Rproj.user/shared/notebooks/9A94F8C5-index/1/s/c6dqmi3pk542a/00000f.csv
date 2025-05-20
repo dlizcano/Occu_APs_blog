@@ -1,0 +1,7 @@
+"0",""
+"0","# Resultados --------------------------------------------------------------"
+"0",""
+"0","# Extraemos lo tabla de valores estimados"
+"0","modresult <- as.data.frame(summary(fit.commu)[[""statistics""]])"
+"0","# View(modresult)"
+"0","DT::datatable(round(summary(fit.commu)$statistics, 3))"

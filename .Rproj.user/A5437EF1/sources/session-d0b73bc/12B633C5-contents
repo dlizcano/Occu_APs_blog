@@ -1,0 +1,100 @@
+---
+title: "The problem"
+subtitle: "Using the WCS camera trap dataset"
+lightbox: true
+author: 
+  - name: German Forero
+    orcid: https://orcid.org/0000-0001-9952-7221
+  - name: Diego J. Lizcano
+    orcid: https://orcid.org/0000-0002-9648-0576
+toc: true
+format: 
+  html:
+    code-fold: true
+    code-block-bg: true
+    code-block-border-left: "#31BAE9"
+license: CC BY-SA
+date: "2025-05-20"
+citation: true
+google-scholar: true
+bibliography: grateful-refs.bib
+bibliographystyle: https://www.zotero.org/styles/tapir-conservation
+categories: [model]
+---
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| warning: false
+#| message: false
+#| 
+library(grateful)
+library(readxl)
+library(DT)
+library(sf)
+library(mapview)
+library(maps)
+library(tmap)
+library(terra)
+library(elevatr)
+library(unmarked)
+library(ubms)
+
+library(tidyverse)
+
+```
+
+
+We want to Asses the role of Protected Areas in the conservation of vertebrates using on the ground data.
+
+Evaluating whther PA are working is essential as they are perhaps the primary strategy for averting biodiversity loss.
+Its been suggested that some do no work, paper parks
+Its crucial to continue working on best methods to evaluate their impact.
+
+Over a decade ago researchers started evaluting this.
+Mostly focused on the effects of PA in reducing threats (fires, deforestation) and focused on forest cover.
+
+
+Even if effective in protecting forests, and the forest is in very good conditioon, PA could have “empty forests” and lose biodiversity (hunting, diseases or even their sizes). So when we say a PA is effective, are we looking at this?
+
+![](emptyforest.png)
+
+::: {.callout-tip}
+## Animals live inside the fores. The forest is not empty!
+:::
+
+ 
+
+We want to compare apples with apples and control for covariates related with occurence and abundance of species, like elevation, human pressures, etc.
+
+
+Occupancyis a cost effective method for evaluation the a population, a state variable, representing the proportion of the área occupied by the species, considering the problem of imperfect detection 
+
+
+We compiled deployments-studies that have intentionally sampled inside and outside PAS, in a quasi-experimental design, using camera traps. 
+
+Each case is adequatly matched, in a similar fashion as the remote sensing approaches. 
+
+
+We used a multispecies occupancy model incorporatind spatial autocorrelation to compare occupancy in and out and also as a distance to the protected area border. 
+
+
+
+
+## Package Citation
+
+```{r}
+#| code-fold: true
+pkgs <- cite_packages(output = "paragraph", pkgs="Session", out.dir = ".")
+# knitr::kable(pkgs)
+pkgs
+```
+
+## Sesion info
+
+::: {.callout-note collapse=true}
+```{r}
+print(sessionInfo(), locale = FALSE)
+```
+:::
+

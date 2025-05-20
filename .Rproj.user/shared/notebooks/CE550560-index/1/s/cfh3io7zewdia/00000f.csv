@@ -1,0 +1,5 @@
+"0","out.sp.ms.pred <- predict(out.msom, X.0, coords.0)
+"
+"2","Error en predict.spMsPGOcc(out.msom, X.0, coords.0): 
+  error: X.0 must have 4 columns
+"
