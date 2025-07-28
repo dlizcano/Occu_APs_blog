@@ -3,6 +3,10 @@ project:
   output-dir: docs
   
 website:
+  favicon: favicon.png
+  twitter-card: true
+  site-url: https://dlizcano.github.io/Occu_APs_blog
+  open-graph: true
   title: "Occupancy in Protected Areas"
   navbar:
     right:

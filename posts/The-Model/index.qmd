@@ -45,17 +45,17 @@ library(tidyverse)
 ```
 
 
-We want to Asses the role of Protected Areas in the conservation of vertebrates using on the ground data.
+We want to Asses the role of Protected Areas (PA) in the conservation of vertebrates using on the ground data.
 
-Evaluating whther PA are working is essential as they are perhaps the primary strategy for averting biodiversity loss.
+Evaluating whether PA are working is essential as they are perhaps the primary strategy for averting biodiversity loss.
 Its been suggested that some do no work, paper parks
 Its crucial to continue working on best methods to evaluate their impact.
 
-Over a decade ago researchers started evaluting this.
+Over a decade ago researchers started evaluating this.
 Mostly focused on the effects of PA in reducing threats (fires, deforestation) and focused on forest cover.
 
 
-Even if effective in protecting forests, and the forest is in very good conditioon, PA could have “empty forests” and lose biodiversity (hunting, diseases or even their sizes). So when we say a PA is effective, are we looking at this?
+Even if we are effective in protecting forests, and the forest is in very good condition, PA could have “empty forests” and loosed biodiversity (hunting, diseases or even their sizes). So when we say a PA is effective, are we looking at this?
 
 ![](emptyforest.png)
 
@@ -65,19 +65,18 @@ Even if effective in protecting forests, and the forest is in very good conditio
 
  
 
-We want to compare apples with apples and control for covariates related with occurence and abundance of species, like elevation, human pressures, etc.
+We want to compare apples with apples and control for covariates related with occupancy and abundance of species, like elevation, human pressures, ecosystem type, etc.
 
 
-Occupancyis a cost effective method for evaluation the a population, a state variable, representing the proportion of the área occupied by the species, considering the problem of imperfect detection 
+Occupancy is a cost effective method for evaluation a population, it is a state variable, representing the proportion of the area occupied by the species, solving the problem of imperfect detection.  
 
 
 We compiled deployments-studies that have intentionally sampled inside and outside PAS, in a quasi-experimental design, using camera traps. 
 
-Each case is adequatly matched, in a similar fashion as the remote sensing approaches. 
+Each case each camera is adequately matched, in a similar fashion as the remote sensing approaches. 
 
 
-We used a multispecies occupancy model incorporatind spatial autocorrelation to compare occupancy in and out and also as a distance to the protected area border. 
-
+We used a multispecies occupancy model, and a variation incorporating spatial autocorrelation, to compare occupancy inside and outside the PA and also as a distance to the protected area border. 
 
 
 

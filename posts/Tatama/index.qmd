@@ -1,0 +1,175 @@
+---
+title: "Mapping Tatama Andean Bear in and out"
+subtitle: "Using Resultados Tatama"
+lightbox: true
+author: 
+  - name: Leonor Valenzuela 
+    orcid: https://orcid.org/0000-0003-0814-3690
+  - name: German Forero
+    orcid: https://orcid.org/0000-0001-9952-7221
+  - name: Diego J. Lizcano
+    orcid: https://orcid.org/0000-0002-9648-0576
+toc: true
+format: 
+  html:
+    code-fold: true
+    code-block-bg: true
+    code-block-border-left: "#31BAE9"
+license: CC BY-SA
+date: "2025-05-16"
+execute:
+  freeze: true
+citation: true
+google-scholar: true
+bibliography: grateful-refs.bib
+bibliographystyle: https://www.zotero.org/styles/tapir-conservation
+categories: [model, code, analysis]
+image: "image.png"
+---
+
+## Stack Occupancy model
+
+Mapping
+
+```{r}
+#| echo: true
+#| code-fold: true
+#| warning: false
+#| message: false
+#| 
+library(grateful)
+library(readxl)
+library(DT)
+library(sf)
+# library()
+library(mapview)
+library(maps)
+library(tmap)
+library(terra)
+library(elevatr)
+#library(spOccupancy)
+
+library(rjags) # Bayesian Graphical Models using MCMC 
+library(bayesplot) # Plotting for Bayesian Models # Plotting for Bayesian Models
+library(tictoc) # Functions for Timing R Scripts, as Well as Implementations of "Stack" and "StackList" Structures 
+library(beepr) # Easily Play Notification Sounds on any Platform 
+library(snowfall) # Easier Cluster Computing (Based on 'snow')
+
+#library(ggmcmc)
+library(camtrapR)
+library(tidyverse)
+
+```
+
+## Read survey data in excel
+
+```{r}
+
+source("C:/CodigoR/WCS-CameraTrap/R/organiza_datos_v3.R")
+
+
+data_oso_tatama <- read_excel("C:/CodigoR/Occu_APs/Occu_APs_blog/posts/Tatama/data/ResultadosTatama.xlsx")
+
+
+Cuadricula_muestreo <- read_sf("C:/CodigoR/Occu_APs/shp/Tatama/CeldasMuestreo.shp") |>
+  mutate (ID=SCid) |> 
+  filter(Nucleo=="Tatama")
+
+muestreadas_Tatama <- Cuadricula_muestreo |> left_join(data_oso_tatama, by ="ID")
+
+Tatama_NP <- read_sf("C:/CodigoR/Occu_APs/shp/Tatama/WDPA_WDOECM_Jul2025_Public_13966_shp-polygons.shp")
+
+Oso_stack <- read_excel("C:/CodigoR/Occu_APs/Occu_APs_blog/posts/Tatama/data/ResultadosTatama.xlsx", 
+    sheet = "Oso-Stack") |> 
+  mutate(In_AP=factor(In_AP)) |> 
+  mutate(obs1=as.numeric(obs1)) |> 
+  mutate(obs2=as.numeric(obs2)) |> 
+  mutate(obs3=as.numeric(obs3)) |> 
+  mutate(year_factor=as.factor(year))
+  
+ # make a map
+ mapview (Tatama_NP, alpha=0.5) + 
+   mapview (Cuadricula_muestreo, color = "green", col.regions = "green", alpha = 0.5) # +
+   #mapview (AP_Tahuayo, color = "green", col.regions = "green", alpha = 0.5) +
+#   mapview (covs_Bol_Madidi_sites, zcol = "in_AP", col.regions =c("red","blue"), burst = TRUE) 
+#   # mapview (covs_Ecu_17_sites, zcol = "in_AP", col.regions 
+
+
+```
+
+```{r}
+
+library(unmarked)
+library(ubms)
+
+umf_stack <- unmarkedFrameOccu(y=Oso_stack[,2:4], 
+                               siteCovs=Oso_stack[,c(1,5,6,7,8)],
+                         # obsCovs=list(date=date_stack[,1:3])
+                         )
+head(umf_stack)
+
+fit_stack1 <- stan_occu(~scale(year) ~In_AP + (1|ID), 
+                       data=umf_stack, chains=3, iter=500)
+
+fit_stack1b <- stan_occu(~1 ~In_AP + (1|ID), 
+                       data=umf_stack, 
+                       chains=3, 
+                       iter=5000)
+
+# fit_stack2 <- stan_occu(~scale(year) ~scale(Dist_AP) + (1|ID), 
+#                       data=umf_stack, chains=3, iter=500)
+
+# fit_stack3 <- stan_occu(~scale(year) ~In_AP + scale(Dist_AP) + (1|ID), 
+#                       data=umf_stack, chains=3, iter=500)
+
+fit_stack4 <- stan_occu(~1 ~ year_factor + (1|ID), 
+                       data=umf_stack, chains=3, iter=500)
+
+fit_stack1
+
+
+
+ran1 <- ranef(fit_stack1, submodel="state")
+pred1 <- predict(fit_stack1, submodel="state") 
+colnames(pred1) <- c("Predicted", "SD", "lower", "upper")
+# compare dentro fuera
+prediction1 <- cbind(Oso_stack[,c(1,5,6,7,8)], pred1) |>
+  group_by(In_AP) |> 
+  summarise_at(c("Predicted", "lower", "upper"), 
+               mean, na.rm = TRUE)
+
+# head(ran$ID[[1]])
+
+ran4 <- ranef(fit_stack4, submodel="state", summary=TRUE)
+# head(ran$ID[[1]])
+
+ubms::plot_effects(fit_stack1, "state") # dentro fuera
+ubms::plot_effects(fit_stack4, "state") # compare years
+
+```
+
+```{r}
+prediction1 <- cbind(Oso_stack[,c(1,5,6,7,8)], pred1) |>
+  group_by(In_AP) |> 
+  summarise_at(c("Predicted", "lower", "upper"), 
+               mean, na.rm = TRUE)
+DT::datatable(prediction1)
+
+```
+
+## Package Citation
+
+```{r}
+#| code-fold: true
+pkgs <- cite_packages(output = "paragraph", pkgs="Session", out.dir = ".")
+# knitr::kable(pkgs)
+pkgs
+```
+
+## Sesion info
+
+::: {.callout-note collapse="true"}
+```{r}
+print(sessionInfo(), locale = FALSE)
+```
+:::
