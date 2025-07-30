@@ -251,6 +251,15 @@ full_sites_14_15_16_sf_UTM$border_dist <- as.numeric(st_distance(full_sites_14_1
 
 #str(full_sites_14_15_16_sf_UTM$border_dist)
 
+# convert true false to inside outside
+full_sites_14_15_16_sf_UTM <- full_sites_14_15_16_sf_UTM |> 
+  mutate(in_AP = case_when(
+    str_detect(in_AP, "TRUE") ~ "inside_AP",
+    str_detect(in_AP, "FALSE") ~ "outside_AP"
+  )) |> mutate(in_AP=as.factor(in_AP))
+
+
+hist(full_sites_14_15_16_sf_UTM$border_dist)
                     
 
 ```
@@ -370,7 +379,7 @@ save(fit.commu, file="C:/CodigoR/Occu_APs/Occu_APs_blog/posts/Llanganates/result
 
 # Resultados --------------------------------------------------------------
 
-# Extraemos lo tabla de valores estimados
+# Extraemos la tabla de valores estimados
 modresult <- as.data.frame(summary(fit.commu)[["statistics"]])
 # View(modresult)
 DT::datatable(round(summary(fit.commu)$statistics, 3))
@@ -426,11 +435,34 @@ MCMCtrace(outMCMC, params = c("beta.ranef.cont.border_dist.mean"), ISB = FALSE, 
 
 coda::gelman.diag(outMCMC,  multivariate = FALSE, transform=FALSE)
                     
+
+# Insufficient iterations to produce Gelman-Rubin plot
 coda::gelman.plot(outMCMC,  multivariate = FALSE)
 
 
 library(bayesplot)
-mcmc_areas(outMCMC, regex_pars = "Nspecies_in_AP")
+# mcmc_areas(outMCMC, regex_pars = "Nspecies_in_AP")
+mcmc_intervals(outMCMC, pars = c("Nspecies_in_AP[1]",
+                                 "Nspecies_in_AP[2]"),
+               point_est = "mean",
+               prob = 0.75, prob_outer = 0.95) +
+  ggtitle("Number of species") + 
+  scale_y_discrete(labels = c("Nspecies_in_AP[1]"=levels(sitecovs$in_AP)[1],
+             "Nspecies_in_AP[2]"=levels(sitecovs$in_AP)[2]))
+
+#Continuous
+p <- mcmc_intervals(outMCMC, 
+               pars = c("beta.ranef.cont.border_dist.mean",
+                         "beta.ranef.cont.elev.mean",
+                        "beta.ranef.categ.in_AP.mean[2]"))
+
+# relabel parameters
+p + scale_y_discrete(
+  labels = c("beta.ranef.cont.border_dist.mean"="Dist_border",
+                         "beta.ranef.cont.elev.mean"="Elevation",
+                        "beta.ranef.categ.in_AP.mean[2]"="in_AP")
+) +
+  ggtitle("Treatment effect on all species")
 
 ```
 
@@ -440,6 +472,7 @@ Convergence is diagnosed when the chains have ‘forgotten’ their initial valu
 
 Values substantially above 1 indicate lack of convergence.
 
+
 ### Results as graph
 
 ```{r}
@@ -447,14 +480,14 @@ Values substantially above 1 indicate lack of convergence.
 
 # Otra gran ventaja de CamtrapR es que permite gráficar de manera muy sencilla la predicción posterior del modelo. Veamos que pasa con la ocupación de cada especie
 
-plot_effects(comu_model,
+camtrapR::plot_effects(comu_model,
               fit.commu,
               submodel = "det",
              combine = T)
 # $effort
 
 
-plot_coef(comu_model,
+camtrapR::plot_coef(comu_model,
            fit.commu,
            submodel = "state",
            combine = T)
@@ -462,7 +495,7 @@ plot_coef(comu_model,
 
 
 
-plot_effects(comu_model, # El modelo
+camtrapR::plot_effects(comu_model, # El modelo
              fit.commu, # El objeto ajustado
              submodel = "state",
              response = "occupancy") # el parámetro de interés

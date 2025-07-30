@@ -275,6 +275,14 @@ multiplic=ifelse(Ecu_full_sf_UTM$in_AP=="TRUE",-1,1)
 Ecu_full_sf_UTM$border_dist <- as.numeric(st_distance(Ecu_full_sf_UTM, AP_Yasuni_UTM_line) * multiplic )
 # print(border_dist)
 
+# convert true false to inside outside
+Ecu_full_sf_UTM <- Ecu_full_sf_UTM |> 
+  mutate(in_AP = case_when(
+    str_detect(in_AP, "TRUE") ~ "inside_AP",
+    str_detect(in_AP, "FALSE") ~ "outside_AP"
+  )) |> mutate(in_AP=as.factor(in_AP))
+
+
 hist(Ecu_full_sf_UTM$border_dist)
 
                     
@@ -398,6 +406,20 @@ DT::datatable(round(summary(fit.commu)$statistics, 3))
 
 Bayesian p-values can be inspected to check for lack of fit (overall or by species). Lack of fit at significance level = 0.05 is indicated by Bayesian p-values below 0.025 or greater than 0.975. The overall Bayesian p-value (Bpvalue) indicates no problems with lack of fit. Likewise, species-level Bayesian p-values (Bpvalue_species) indicate no lack of fit for any species.
 
+### Results as table
+
+```{r}
+
+# Resultados --------------------------------------------------------------
+
+# Extraemos la tabla de valores estimados
+modresult <- as.data.frame(summary(fit.commu)[["statistics"]])
+# View(modresult)
+DT::datatable(round(summary(fit.commu)$statistics, 3))
+```
+
+Bayesian p-values can be inspected to check for lack of fit (overall or by species). Lack of fit at significance level = 0.05 is indicated by Bayesian p-values below 0.025 or greater than 0.975. The overall Bayesian p-value (Bpvalue) indicates no problems with lack of fit. Likewise, species-level Bayesian p-values (Bpvalue_species) indicate no lack of fit for any species.
+
 ### Diagnostics
 
 ```{r}
@@ -412,7 +434,77 @@ posterior1 <- as.array(fit.commu)
 #p <- mcmc_trace(posterior1,  pars = c("mu", "tau"), n_warmup = 300,
 #                facet_args = list(nrow = 2, labeller = label_parsed))
 #p + facet_text(size = 15)
+
+library(MCMCvis)
+library(coda)
+
+outMCMC <- fit.commu #Convert output to MCMC object
+#diagnostics chains 
+
+# all as pdf
+# MCMCtrace(outMCMC)
+
+# MCMCtrace(outMCMC, params = c("alpha0"), type = 'trace', Rhat = TRUE, n.eff = TRUE)
+
+# MCMCtrace(outMCMC, params = c("beta0"), type = 'trace', Rhat = TRUE, n.eff = TRUE)
+
+# MCMCtrace(outMCMC, params = c("beta.ranef.cont.border_dist"), type = 'trace', Rhat = TRUE, n.eff = TRUE)
+
+MCMCtrace(outMCMC, params = c("beta.ranef.cont.border_dist.mean"), type = 'trace', pdf = F, Rhat = TRUE, n.eff = TRUE)
+
+# MCMCtrace(outMCMC, params = c("beta.ranef.cont.elev"), type = 'trace', Rhat = TRUE, n.eff = TRUE)
+
+MCMCtrace(outMCMC, params = c("beta.ranef.cont.elev.mean"), type = 'trace', pdf = F, Rhat = TRUE, n.eff = TRUE)
+
+
+### density
+# MCMCtrace(outMCMC, params = c("Nspecies"), ISB = FALSE, pdf = F, exact = TRUE, post_zm = TRUE, type = 'density', Rhat = TRUE, n.eff = TRUE, ind = TRUE)
+
+### density
+MCMCtrace(outMCMC, params = c("beta.ranef.cont.elev.mean"), ISB = FALSE, pdf = F, exact = TRUE, post_zm = TRUE, type = 'density', Rhat = TRUE, n.eff = TRUE, ind = TRUE)
+
+### density
+MCMCtrace(outMCMC, params = c("beta.ranef.cont.border_dist.mean"), ISB = FALSE, pdf = F, exact = TRUE, post_zm = TRUE, type = 'density', Rhat = TRUE, n.eff = TRUE, ind = TRUE)
+
+coda::gelman.diag(outMCMC,  multivariate = FALSE, transform=FALSE)
+                    
+
+# Insufficient iterations to produce Gelman-Rubin plot
+coda::gelman.plot(outMCMC,  multivariate = FALSE)
+
+
+library(bayesplot)
+# mcmc_areas(outMCMC, regex_pars = "Nspecies_in_AP")
+mcmc_intervals(outMCMC, pars = c("Nspecies_in_AP[1]",
+                                 "Nspecies_in_AP[2]"),
+               point_est = "mean",
+               prob = 0.75, prob_outer = 0.95) +
+  ggtitle("Number of species") + 
+  scale_y_discrete(labels = c("Nspecies_in_AP[1]"=levels(sitecovs$in_AP)[1],
+             "Nspecies_in_AP[2]"=levels(sitecovs$in_AP)[2]))
+
+#Continuous
+p <- mcmc_intervals(outMCMC, 
+               pars = c("beta.ranef.cont.border_dist.mean",
+                         "beta.ranef.cont.elev.mean",
+                        "beta.ranef.categ.in_AP.mean[2]"))
+
+# relabel parameters
+p + scale_y_discrete(
+  labels = c("beta.ranef.cont.border_dist.mean"="Dist_border",
+                         "beta.ranef.cont.elev.mean"="Elevation",
+                        "beta.ranef.categ.in_AP.mean[2]"="in_AP")
+) +
+  ggtitle("Treatment effect on all species")
+
 ```
+
+> Gelman and Rubin's convergence diagnostic: Approximate convergence is diagnosed when the upper limit is close to 1.
+
+Convergence is diagnosed when the chains have ‘forgotten’ their initial values, and the output from all chains is indistinguishable. The gelman.diag diagnostic is applied to a single variable from the chain. It is based a comparison of within-chain and between-chain variances, and is similar to a classical analysis of variance.
+
+Values substantially above 1 indicate lack of convergence.
+
 
 ### Results as graph
 

@@ -29,11 +29,13 @@ alpha0.sigma <- sqrt(1 / alpha0.tau)
 # < empty > 
 
 ## Continuous observation-level covariates on detection - Fixed effects
-# Covariate: effort
-alpha.obs.fixed.cont.effort ~ dnorm(0, 0.05)
+# < empty > 
 
 ## Continuous observation-level covariates on detection - with random effects
-# < empty > 
+# Observation Covariate: effort
+alpha.obs.ranef.cont.effort.mean ~ dnorm(0, 0.05)
+alpha.obs.ranef.cont.effort.tau ~ dgamma(0.1, 0.1)
+alpha.obs.ranef.cont.effort.sigma <- sqrt(1 / alpha.obs.ranef.cont.effort.tau)
 
 ## Categorical observation-level covariates on detection - Fixed effect
 # < empty > 
@@ -98,7 +100,8 @@ alpha0[i] ~ dnorm(alpha0.mean, alpha0.tau)
 # categorical detection covariates: no random effect of species
 
 
-# continuous observation-level detection covariates: no random effect of species
+# continuous detection covariates with random effects:
+alpha.obs.ranef.cont.effort[i] ~ dnorm(alpha.obs.ranef.cont.effort.mean, alpha.obs.ranef.cont.effort.tau)
 
 
 # categorical observation covariates: no random effect of species
@@ -129,7 +132,7 @@ z[i,j] ~ dbern(psi[i, j])
 # occasion loop
 for (k in 1:maxocc){
 # Detection probability formula
-logit.p[i,j,k] <- alpha0[i] + alpha.obs.fixed.cont.effort * effort[j, k]
+logit.p[i,j,k] <- alpha0[i] + alpha.obs.ranef.cont.effort[i] * effort[j, k]
 
 # convert p to real scale
 p[i,j,k] <- exp(logit.p[i,j,k]) / (1+exp(logit.p[i,j,k]))
@@ -152,16 +155,22 @@ NStationsOccupied[i] <- sum(z[i, 1:J])
 ### species is part of community?
 speciesInCommunity[i] <- 1 - equals(NStationsOccupied[i],0)
 
-### Fraction of stations occupied
-fractionStationsOccupied[i] <- NStationsOccupied[i] /J
+### Number of stations occupied (in each level of 'in_AP')
+fractionStationsOccupied[i, 1] <- sum(z[i, 1:J1])/J1
+fractionStationsOccupied[i, 2] <- sum(z[i, (J1 + 1):J]) / (J - (J1))
 
-### Does species occur at all (at any station)
-occ[i] <- 1 - equals(fractionStationsOccupied[i], 0)
+### Does species occur at all (at any station)(within each level of 'in_AP')
+occ[i, 1]<- 1 - equals(fractionStationsOccupied[i,1], 0)
+occ[i, 2]<- 1 - equals(fractionStationsOccupied[i,2], 0)
 }    # close species loop
 
 ### total number of species
 Nspecies <- sum(speciesInCommunity[1:M])
 
+### number of species (in each level of 'in_AP')
+for(s_occu in 1:2){
+Nspecies_in_AP[s_occu] <- sum(occ[1:M, s_occu])
+}
 ### Species richness at every location
 for (j in 1:J){
 Nspecies_station[j] <- sum(z[1:M,j])
